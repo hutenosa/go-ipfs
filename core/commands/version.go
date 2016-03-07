@@ -53,7 +53,7 @@ var VersionCmd = &cmds.Command{
 				return nil, err
 			}
 			if commit {
-				commitTxt = "-" + v.Commit
+				commitTxt = "+" + v.Commit
 			}
 
 			number, _, err := res.Request().Option("number").Bool()

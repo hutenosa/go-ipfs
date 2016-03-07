@@ -34,6 +34,9 @@ ENV GOPATH     /go
 ENV PATH       /go/bin:$PATH
 ENV SRC_PATH   /go/src/github.com/ipfs/go-ipfs
 
+# Change to ARG once travis gets updated docker (1.9+)
+ENV IPFS_VERSION=0.4.0-rc2
+
 # Get the go-ipfs sourcecode
 COPY . $SRC_PATH
 
@@ -55,10 +58,12 @@ RUN apk add --update musl go=$GO_VERSION git bash wget ca-certificates \
 	# This saves us quite a bit of image size.
 	&& ref=$(cat .git/HEAD | grep ref | cut -d' ' -f2) \
 	&& commit=$(if [ -z "$ref" ]; then cat .git/HEAD; else cat ".git/$ref"; fi | head -c 7) \
-	&& echo "ldflags=-X github.com/ipfs/go-ipfs/repo/config.CurrentCommit=$commit" \
+	&& ldflags="-X github.com/ipfs/go-ipfs/repo/config.CurrentCommit=$commit \
+		-X github.com/ipfs/go-ipfs/repo/config.CurrentVersionNumber=$IPFS_VERSION" \
+	&& echo "ldflags: $ldflags" \
 	# Build and install IPFS and entrypoint script
 	&& cd $SRC_PATH/cmd/ipfs \
-	&& go build -ldflags "-X github.com/ipfs/go-ipfs/repo/config.CurrentCommit=$commit" \
+	&& go build -ldflags $ldflags \
 	&& cp ipfs /usr/local/bin/ipfs \
 	&& cp $SRC_PATH/bin/container_daemon /usr/local/bin/start_ipfs \
 	&& chmod 755 /usr/local/bin/start_ipfs \
