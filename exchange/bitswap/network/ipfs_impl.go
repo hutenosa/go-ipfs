@@ -10,6 +10,7 @@ import (
 	context "gx/ipfs/QmZy2y8t9zQH2a1b8q2ZSLKp17ATuJoCNxxyMFG5qFExpt/go-net/context"
 	logging "gx/ipfs/QmaDNZ4QMdBdku1YZWBysufYyoQt1negQGNav6PLYarbY8/go-log"
 	peer "gx/ipfs/QmbyvM8zRFDkbFdYyt1MnevUMJ62SiSGbfDFZ3Z8nkrzr4/go-libp2p-peer"
+	"strings"
 )
 
 var log = logging.Logger("bitswap_network")
@@ -21,6 +22,7 @@ func NewFromIpfsHost(host host.Host, r routing.IpfsRouting) BitSwapNetwork {
 		routing: r,
 	}
 	host.SetStreamHandler(ProtocolBitswap, bitswapNetwork.handleNewStream)
+	host.SetStreamHandler(ProtocolBitswapOld, bitswapNetwork.handleNewStream)
 	host.Network().Notify((*netNotifiee)(&bitswapNetwork))
 	// TODO: StopNotify.
 
@@ -38,7 +40,6 @@ type impl struct {
 }
 
 func (bsnet *impl) newStreamToPeer(ctx context.Context, p peer.ID) (inet.Stream, error) {
-
 	// first, make sure we're connected.
 	// if this fails, we cannot connect to given peer.
 	//TODO(jbenet) move this into host.NewStream?
@@ -46,7 +47,23 @@ func (bsnet *impl) newStreamToPeer(ctx context.Context, p peer.ID) (inet.Stream,
 		return nil, err
 	}
 
-	return bsnet.host.NewStream(ctx, ProtocolBitswap, p)
+	s, err := bsnet.host.NewStream(ctx, ProtocolBitswap, p)
+	if err != nil {
+		return nil, err
+	}
+
+	// TEMP: trigger read handshake to detect protocl mismatch
+	// TODO: once the network has switched over entirely to the versioned
+	// protocol string, deprecate the old one
+	_, err = s.Read(nil)
+	if err != nil {
+		if strings.Contains(err.Error(), "protocol mismatch") {
+			return bsnet.host.NewStream(ctx, ProtocolBitswapOld, p)
+		}
+		return nil, err
+	}
+
+	return s, nil
 }
 
 func (bsnet *impl) SendMessage(
