@@ -3,6 +3,7 @@ COMMIT := $(shell bin/genversion --commit)
 ldflags = "-X "github.com/ipfs/go-ipfs/repo/config".CurrentVersionNumber=$(VERSION) \
 -X "github.com/ipfs/go-ipfs/repo/config".CurrentCommit=$(COMMIT)"
 
+
 all: install
 
 install:
