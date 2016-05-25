@@ -48,16 +48,16 @@ shellquote() {
 
 # This takes a Dockerfile, and a build context directory
 docker_build() {
-    ipfs_version=$($2/bin/genversion --version)
+    ipfs_full_version=$($2/bin/genversion --version --commit)
 
     # Workaround for docker < 1.9
     if test "$TRAVIS" = true
     then
-        cat "$1" | sed "s/^ARG IPFS_VERSION.*/ENV IPFS_VERSION=$ipfs_version/" > "$1.travis"
+        cat "$1" | sed "s/^ARG IPFS_FULL_VERSION.*/ENV IPFS_FULL_VERSION=$ipfs_full_version/" > "$1.travis"
         docker build --rm -f "$1.travis" "$2"
         rm "$1.travis"
     else
-        docker build --rm --build-arg IPFS_VERSION=$ipfs_version -f "$1" "$2"
+        docker build --rm --build-arg IPFS_FULL_VERSION=$ipfs_full_version -f "$1" "$2"
     fi
 }
 

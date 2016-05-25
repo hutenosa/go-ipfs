@@ -43,13 +43,13 @@ RUN apk add --update musl go=$GO_VERSION git bash wget ca-certificates \
 
 COPY . $SRC_PATH
 
-ARG IPFS_VERSION
+ARG IPFS_FULL_VERSION
 
 RUN cd $SRC_PATH \
 	&& ref=$(cat .git/HEAD | grep ref | cut -d' ' -f2) \
 	&& commit=$(if [ -z "$ref" ]; then cat .git/HEAD; else cat ".git/$ref"; fi | head -c 7) \
 	&& ldflags="-X github.com/ipfs/go-ipfs/repo/config.CurrentCommit=$commit \
-		-X github.com/ipfs/go-ipfs/repo/config.CurrentVersionNumber=$IPFS_VERSION" \
+		-X github.com/ipfs/go-ipfs/repo/config.FullVersion=$IPFS_FULL_VERSION" \
 	&& echo "ldflags: $ldflags" \
 	&& cd $SRC_PATH/cmd/ipfs \
 	&& go build -ldflags "$ldflags" \
