@@ -25,3 +25,9 @@ sudo: required
 
 services:
   - docker
+
+before_install:
+  - mkdir -p $HOME/gopath/src/github.com/ipfs/go-ipfs
+  - rsync -az ${TRAVIS_BUILD_DIR}/ $HOME/gopath/src/github.com/ipfs/go-ipfs/
+  - export TRAVIS_BUILD_DIR=$HOME/gopath/src/github.com/ipfs/go-ipfs
+  - cd $HOME/gopath/src/github.com/ipfs/go-ipfs
